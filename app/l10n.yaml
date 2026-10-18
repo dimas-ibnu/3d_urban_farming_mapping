@@ -1,0 +1,7 @@
+# Bahasa Indonesia is the template and the default locale; English follows it.
+arb-dir: lib/l10n
+template-arb-file: app_id.arb
+output-dir: lib/l10n/gen
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+nullable-getter: false

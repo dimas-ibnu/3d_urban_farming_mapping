@@ -1,0 +1,44 @@
+{
+  "@@locale": "id",
+  "appTitle": "Kebunku",
+  "@appTitle": { "description": "Nama aplikasi yang tampil di judul dan app bar." },
+  "sceneTabTitle": "Denah 3D",
+  "@sceneTabTitle": { "description": "Judul halaman yang menampilkan adegan 3D." },
+  "statusConnecting": "Menyambungkan ke adegan 3D…",
+  "@statusConnecting": { "description": "Status sebelum adegan mengirim pesan ready." },
+  "statusReady": "Adegan siap (protokol v{version})",
+  "@statusReady": {
+    "description": "Status setelah adegan mengirim pesan ready.",
+    "placeholders": { "version": { "type": "int" } }
+  },
+  "statusSelected": "Pot terpilih: {id}",
+  "@statusSelected": {
+    "description": "Status saat pengguna menyentuh sebuah pot di adegan.",
+    "placeholders": { "id": { "type": "String" } }
+  },
+  "statusDeselected": "Tidak ada pot yang dipilih",
+  "@statusDeselected": { "description": "Status saat pilihan pot dibatalkan." },
+  "statusError": "Kesalahan adegan: {message}",
+  "@statusError": {
+    "description": "Status saat adegan melaporkan kesalahan.",
+    "placeholders": { "message": { "type": "String" } }
+  },
+  "addPot": "Tambah pot",
+  "@addPot": { "description": "Tombol untuk menambahkan satu pot ke adegan." },
+  "clearPots": "Kosongkan",
+  "@clearPots": { "description": "Tombol untuk menghapus semua pot." },
+  "potCount": "{count, plural, =0{Belum ada pot} other{{count} pot}}",
+  "@potCount": {
+    "description": "Jumlah pot di adegan.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "fpsLabel": "{fps} fps",
+  "@fpsLabel": {
+    "description": "Pengukuran kecepatan render dari adegan.",
+    "placeholders": { "fps": { "type": "int" } }
+  },
+  "toggleOverlay": "Tampilkan FPS di adegan",
+  "@toggleOverlay": { "description": "Sakelar untuk overlay FPS di dalam adegan." },
+  "unsupportedPlatform": "Platform ini belum didukung.",
+  "@unsupportedPlatform": { "description": "Pesan untuk platform tanpa transport 3D." }
+}

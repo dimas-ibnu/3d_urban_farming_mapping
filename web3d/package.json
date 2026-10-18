@@ -1,0 +1,28 @@
+{
+  "name": "web3d",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Three.js 3D scene for the urban farming planner, bundled into the Flutter app",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src vite.config.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.38.0",
+    "@types/three": "^0.182.0",
+    "eslint": "^9.38.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vite": "^7.1.12"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

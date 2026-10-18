@@ -1,0 +1,16 @@
+{
+  "@@locale": "en",
+  "appTitle": "Kebunku",
+  "sceneTabTitle": "3D plan",
+  "statusConnecting": "Connecting to the 3D scene…",
+  "statusReady": "Scene ready (protocol v{version})",
+  "statusSelected": "Selected pot: {id}",
+  "statusDeselected": "No pot selected",
+  "statusError": "Scene error: {message}",
+  "addPot": "Add pot",
+  "clearPots": "Clear",
+  "potCount": "{count, plural, =0{No pots yet} other{{count} pots}}",
+  "fpsLabel": "{fps} fps",
+  "toggleOverlay": "Show FPS in the scene",
+  "unsupportedPlatform": "This platform is not supported yet."
+}
