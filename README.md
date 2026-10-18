@@ -100,3 +100,38 @@ Strings live in `app/lib/l10n/*.arb`; `app_id.arb` (Bahasa Indonesia) is the
 template and the default locale, `app_en.arb` is the English translation.
 `flutter pub get` regenerates `app/lib/l10n/gen/`, which is not checked in. Add
 new strings to both files and never hard-code user-visible text.
+
+## Deploying the web app
+
+The web app is hosted on [Netlify](https://www.netlify.com/). GitHub Actions builds and deploys it (`.github/workflows/deploy.yml`). Netlify does not build it.
+
+| Trigger | Result |
+|---|---|
+| Push to `main` | Production deploy |
+| Pull request | Deploy preview at `https://pr-<number>--<site>.netlify.app`. The URL is posted as a comment on the PR and updated on each push |
+| Manual run (`workflow_dispatch`) | Draft deploy on any branch; deploys to production when run on `main` |
+
+The workflow:
+
+1. Builds `web3d/` (`npm ci && npm run build`). Vite writes one self-contained `index.html` into `app/assets/web3d/`.
+2. Builds the Flutter web app (`flutter build web --release`). The scene ends up at `app/build/web/assets/assets/web3d/index.html`.
+3. Deploys `app/build/web` with the Netlify CLI (`netlify deploy --no-build`), run from the repo root so `netlify.toml` is applied.
+
+`netlify.toml` sets the SPA fallback (`/* /index.html 200`), the MIME types for `.wasm` and `.js`, and caching. Flutter's entry files (`index.html`, `main.dart.js`, `flutter_bootstrap.js`, `flutter_service_worker.js`) and the web3d scene are served with `no-cache`, so users get the new version after each deploy.
+
+### Required secrets
+
+Add these under **Settings → Secrets and variables → Actions** in the GitHub repo. Never commit them.
+
+| Secret | Where to get it |
+|---|---|
+| `NETLIFY_AUTH_TOKEN` | Netlify → User settings → Applications → Personal access tokens |
+| `NETLIFY_SITE_ID` | Netlify → Site configuration → General → Site details → Site ID |
+
+If either secret is missing, the build still runs and the deploy steps are skipped with a notice. This also happens on pull requests from forks, which don't get repository secrets.
+
+### One-time Netlify setup
+
+1. Create the site in Netlify (**Add new site → Deploy manually** is enough; it doesn't need to be linked to the repo).
+2. Turn off Netlify's own builds: **Site configuration → Build & deploy → Continuous deployment → Build settings → Stop builds**. GitHub Actions builds every commit, so Netlify must not build it again. As a backstop, `netlify.toml` also sets `ignore = "exit 0"`, which cancels any Netlify build that does start.
+3. Add the two secrets above.
