@@ -1,24 +1,20 @@
 name: Deploy web
 
 # Builds web3d/ + the Flutter web app and deploys app/build/web to Netlify.
-# - push to main  -> production deploy
-# - pull request  -> deploy preview, URL posted on the PR
+# Runs only on pushes to main (i.e. after a PR is merged) -> production deploy.
 # The deploy steps are skipped (build still runs) when the Netlify secrets are
-# not configured, e.g. before they are added or on PRs from forks.
+# not configured.
 
 on:
   push:
     branches: [main]
-  pull_request:
-  workflow_dispatch:
 
 concurrency:
-  group: deploy-${{ github.event.pull_request.number || github.ref }}
+  group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  pull-requests: write
 
 env:
   FLUTTER_VERSION: '3.44.1'
@@ -72,48 +68,14 @@ jobs:
           fi
 
       - name: Deploy to Netlify
-        id: netlify
         if: steps.secrets.outputs.available == 'true'
         env:
-          IS_PROD: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          COMMIT_TITLE: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+          COMMIT_TITLE: ${{ github.event.head_commit.message }}
         run: |
           # Run from the repo root so netlify.toml (headers, redirects) is applied.
           # --no-build: GitHub Actions already built the site.
-          args=(deploy --no-build --dir=app/build/web --site="$NETLIFY_SITE_ID" --json)
           message="${COMMIT_TITLE%%$'\n'*} (${GITHUB_SHA::7})"
-          if [ "$IS_PROD" = "true" ]; then
-            args+=(--prod --message="$message")
-          elif [ -n "$PR_NUMBER" ]; then
-            args+=(--alias="pr-$PR_NUMBER" --message="PR #$PR_NUMBER: $message")
-          else
-            args+=(--message="$message")
-          fi
-          npx --yes "netlify-cli@$NETLIFY_CLI_VERSION" "${args[@]}" > netlify-deploy.json
-          if [ "$IS_PROD" = "true" ]; then
-            url=$(jq -r '.url' netlify-deploy.json)
-          else
-            url=$(jq -r '.deploy_url' netlify-deploy.json)
-          fi
-          echo "url=$url" >> "$GITHUB_OUTPUT"
+          npx --yes "netlify-cli@$NETLIFY_CLI_VERSION" deploy --no-build --prod \
+            --dir=app/build/web --site="$NETLIFY_SITE_ID" --message="$message" --json > netlify-deploy.json
+          url=$(jq -r '.url' netlify-deploy.json)
           echo "### Netlify deploy: $url" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Comment preview URL on PR
-        if: github.event_name == 'pull_request' && steps.netlify.outputs.url != ''
-        uses: actions/github-script@v7
-        env:
-          PREVIEW_URL: ${{ steps.netlify.outputs.url }}
-        with:
-          script: |
-            const marker = '<!-- netlify-deploy-preview -->';
-            const body = `${marker}\n**Netlify deploy preview:** ${process.env.PREVIEW_URL}\n\nCommit: ${context.payload.pull_request.head.sha.slice(0, 7)}`;
-            const { owner, repo } = context.repo;
-            const issue_number = context.payload.pull_request.number;
-            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
-            const existing = comments.find((c) => c.body?.includes(marker));
-            if (existing) {
-              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
-            } else {
-              await github.rest.issues.createComment({ owner, repo, issue_number, body });
-            }
