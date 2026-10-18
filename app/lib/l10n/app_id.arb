@@ -40,5 +40,62 @@
   "toggleOverlay": "Tampilkan FPS di adegan",
   "@toggleOverlay": { "description": "Sakelar untuk overlay FPS di dalam adegan." },
   "unsupportedPlatform": "Platform ini belum didukung.",
-  "@unsupportedPlatform": { "description": "Pesan untuk platform tanpa transport 3D." }
+  "@unsupportedPlatform": { "description": "Pesan untuk platform tanpa transport 3D." },
+  "containerPot": "pot",
+  "@containerPot": { "description": "Wadah: pot biasa atau polybag di lantai." },
+  "containerRack": "rak vertikal",
+  "@containerRack": { "description": "Wadah: pot di rak bertingkat." },
+  "containerHanging": "pot gantung",
+  "@containerHanging": { "description": "Wadah: pot yang digantung." },
+  "containerWall": "pot dinding",
+  "@containerWall": { "description": "Wadah: pot atau kantong yang menempel di dinding." },
+  "cropReasonGoodFit": "Cocok untuk tempat ini",
+  "@cropReasonGoodFit": { "description": "Alasan saran tanaman: tidak ada kendala." },
+  "cropReasonNotEnoughSun": "Butuh ≥{required} jam matahari, tempat ini {actual} jam",
+  "@cropReasonNotEnoughSun": {
+    "description": "Alasan saran tanaman: matahari kurang dari kebutuhan minimum.",
+    "placeholders": {
+      "required": { "type": "double", "format": "decimalPattern" },
+      "actual": { "type": "double", "format": "decimalPattern" }
+    }
+  },
+  "cropReasonBelowIdealSun": "Tumbuh paling baik dengan {ideal} jam matahari, tempat ini {actual} jam",
+  "@cropReasonBelowIdealSun": {
+    "description": "Alasan saran tanaman: matahari cukup tapi di bawah ideal.",
+    "placeholders": {
+      "ideal": { "type": "double", "format": "decimalPattern" },
+      "actual": { "type": "double", "format": "decimalPattern" }
+    }
+  },
+  "cropReasonTooMuchSun": "Lebih suka teduh sebagian (≤{max} jam matahari), tempat ini {actual} jam",
+  "@cropReasonTooMuchSun": {
+    "description": "Alasan saran tanaman: matahari terlalu banyak untuk tanaman ini.",
+    "placeholders": {
+      "max": { "type": "double", "format": "decimalPattern" },
+      "actual": { "type": "double", "format": "decimalPattern" }
+    }
+  },
+  "cropReasonContainerNotSuitable": "Kurang cocok ditanam di {container}",
+  "@cropReasonContainerNotSuitable": {
+    "description": "Alasan saran tanaman: jenis wadah tidak cocok.",
+    "placeholders": {
+      "container": { "type": "String" }
+    }
+  },
+  "cropReasonPotTooShallow": "Butuh pot sedalam ≥{required} cm, pot ini {actual} cm",
+  "@cropReasonPotTooShallow": {
+    "description": "Alasan saran tanaman: pot terlalu dangkal.",
+    "placeholders": {
+      "required": { "type": "double", "format": "decimalPattern" },
+      "actual": { "type": "double", "format": "decimalPattern" }
+    }
+  },
+  "cropReasonPotTooSmall": "Butuh pot ≥{required} liter, pot ini {actual} liter",
+  "@cropReasonPotTooSmall": {
+    "description": "Alasan saran tanaman: volume pot terlalu kecil.",
+    "placeholders": {
+      "required": { "type": "double", "format": "decimalPattern" },
+      "actual": { "type": "double", "format": "decimalPattern" }
+    }
+  }
 }
