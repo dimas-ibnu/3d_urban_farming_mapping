@@ -1,0 +1,119 @@
+name: Deploy web
+
+# Builds web3d/ + the Flutter web app and deploys app/build/web to Netlify.
+# - push to main  -> production deploy
+# - pull request  -> deploy preview, URL posted on the PR
+# The deploy steps are skipped (build still runs) when the Netlify secrets are
+# not configured, e.g. before they are added or on PRs from forks.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  FLUTTER_VERSION: '3.44.1'
+  NODE_VERSION: '22'
+  NETLIFY_CLI_VERSION: '23'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: web3d/package-lock.json
+
+      - name: Build web3d
+        working-directory: web3d
+        run: |
+          npm ci
+          npm run build
+          # vite writes straight into the Flutter assets (see vite.config.ts).
+          test -f ../app/assets/web3d/index.html
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Build Flutter web
+        working-directory: app
+        run: |
+          flutter pub get
+          flutter build web --release
+          test -f build/web/assets/assets/web3d/index.html
+
+      - name: Check Netlify secrets
+        id: secrets
+        run: |
+          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Netlify deploy skipped::NETLIFY_AUTH_TOKEN and/or NETLIFY_SITE_ID are not set for this run."
+          fi
+
+      - name: Deploy to Netlify
+        id: netlify
+        if: steps.secrets.outputs.available == 'true'
+        env:
+          IS_PROD: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_TITLE: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+        run: |
+          # Run from the repo root so netlify.toml (headers, redirects) is applied.
+          # --no-build: GitHub Actions already built the site.
+          args=(deploy --no-build --dir=app/build/web --site="$NETLIFY_SITE_ID" --json)
+          message="${COMMIT_TITLE%%$'\n'*} (${GITHUB_SHA::7})"
+          if [ "$IS_PROD" = "true" ]; then
+            args+=(--prod --message="$message")
+          elif [ -n "$PR_NUMBER" ]; then
+            args+=(--alias="pr-$PR_NUMBER" --message="PR #$PR_NUMBER: $message")
+          else
+            args+=(--message="$message")
+          fi
+          npx --yes "netlify-cli@$NETLIFY_CLI_VERSION" "${args[@]}" > netlify-deploy.json
+          if [ "$IS_PROD" = "true" ]; then
+            url=$(jq -r '.url' netlify-deploy.json)
+          else
+            url=$(jq -r '.deploy_url' netlify-deploy.json)
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "### Netlify deploy: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request' && steps.netlify.outputs.url != ''
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.netlify.outputs.url }}
+        with:
+          script: |
+            const marker = '<!-- netlify-deploy-preview -->';
+            const body = `${marker}\n**Netlify deploy preview:** ${process.env.PREVIEW_URL}\n\nCommit: ${context.payload.pull_request.head.sha.slice(0, 7)}`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+            }
