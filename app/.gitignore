@@ -50,3 +50,6 @@ app.*.map.json
 
 # Generated from lib/l10n/*.arb by `flutter pub get` (see l10n.yaml).
 /lib/l10n/gen/
+
+# Kotlin incremental-build cache, written by `flutter build apk`.
+.kotlin/

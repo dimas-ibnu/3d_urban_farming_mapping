@@ -1,15 +1,38 @@
 import 'dart:convert';
 
+import '../model/project.dart';
+
 /// Versioned JSON message protocol between the Flutter app and the Three.js
 /// scene in `web3d/`.
 ///
-/// Keep this file in sync with `web3d/src/protocol.ts`. Bump [kProtocolVersion]
-/// on every breaking change: the app ignores envelopes from another version
-/// rather than guessing at their shape.
-const int kProtocolVersion = 1;
+/// Keep this file in sync with `web3d/src/protocol.ts`, and the table in
+/// `README.md` in sync with both. Bump [kProtocolVersion] on every breaking
+/// change: each side ignores envelopes from another version rather than
+/// guessing at their shape.
+///
+/// v2 replaces the prototype's pot-only messages with commands that mirror the
+/// project model: the app pushes the space and the items, and the scene reports
+/// what the user touched or dragged. The app stays the single source of truth —
+/// an [ItemMoved] event is a *request*, applied only once the app has validated
+/// and echoed it back as [UpsertItem].
+const int kProtocolVersion = 2;
 
 /// Name of the JS handler (Android) and of the global inbox in the scene.
 const String kChannelName = 'kebunku';
+
+/// Which camera the scene renders with.
+enum SceneView {
+  /// Top-down, orthographic: the plan view for placing things precisely.
+  plan2d,
+
+  /// Orbiting perspective camera.
+  orbit3d;
+
+  String get wire => this == SceneView.plan2d ? '2d' : '3d';
+
+  static SceneView fromWire(Object? value) =>
+      value == '2d' ? SceneView.plan2d : SceneView.orbit3d;
+}
 
 /// A message the app sends to the scene.
 sealed class Web3dCommand {
@@ -28,70 +51,101 @@ sealed class Web3dCommand {
   String encode() => jsonEncode(toJson());
 }
 
-class SetFloor extends Web3dCommand {
-  const SetFloor({required this.width, required this.depth});
+/// Replaces the whole space: outline, height, facing direction and barriers.
+///
+/// The scene rebuilds its floor and walls from this and keeps the items it
+/// already has, so a space edit does not cost a full resync.
+class SetSpace extends Web3dCommand {
+  const SetSpace(this.space);
 
-  final double width;
-  final double depth;
+  final Space space;
 
   @override
-  String get type => 'setFloor';
+  String get type => 'setSpace';
 
   @override
-  Map<String, Object?> get payload => {'width': width, 'depth': depth};
+  Map<String, Object?> get payload => {'space': space.toJson()};
 }
 
-class AddPot extends Web3dCommand {
-  const AddPot({
-    required this.id,
-    required this.x,
-    required this.z,
-    this.radius = 0.16,
-    this.height = 0.22,
-    this.color,
-  });
+/// Adds an item or replaces the one with the same id.
+class UpsertItem extends Web3dCommand {
+  const UpsertItem(this.item);
 
-  final String id;
-  final double x;
-  final double z;
-  final double radius;
-  final double height;
-  final String? color;
+  final PlacedItem item;
 
   @override
-  String get type => 'addPot';
+  String get type => 'upsertItem';
 
   @override
-  Map<String, Object?> get payload => {
-    'id': id,
-    'x': x,
-    'z': z,
-    'radius': radius,
-    'height': height,
-    if (color != null) 'color': color,
-  };
+  Map<String, Object?> get payload => {'item': item.toJson()};
 }
 
-class RemovePot extends Web3dCommand {
-  const RemovePot(this.id);
+class RemoveItem extends Web3dCommand {
+  const RemoveItem(this.id);
 
   final String id;
 
   @override
-  String get type => 'removePot';
+  String get type => 'removeItem';
 
   @override
   Map<String, Object?> get payload => {'id': id};
 }
 
-class ClearPots extends Web3dCommand {
-  const ClearPots();
+/// Drops every item. Sent when a plan is replaced wholesale.
+class ClearItems extends Web3dCommand {
+  const ClearItems();
 
   @override
-  String get type => 'clearPots';
+  String get type => 'clearItems';
 
   @override
   Map<String, Object?> get payload => const {};
+}
+
+/// Switches between the 2D plan and the 3D orbit camera.
+class SetView extends Web3dCommand {
+  const SetView(this.view);
+
+  final SceneView view;
+
+  @override
+  String get type => 'setView';
+
+  @override
+  Map<String, Object?> get payload => {'mode': view.wire};
+}
+
+/// Highlights an item, or clears the highlight with a `null` id.
+///
+/// Selection is app state like everything else: tapping in the scene only
+/// *reports* a [ItemSelected], and the highlight follows this command.
+class SetSelection extends Web3dCommand {
+  const SetSelection(this.id);
+
+  final String? id;
+
+  @override
+  String get type => 'setSelection';
+
+  @override
+  Map<String, Object?> get payload => {'id': id};
+}
+
+/// Marks items the app considers invalid, so the scene can tint them.
+///
+/// The scene does its own cheap check while dragging for instant feedback;
+/// this is the authoritative answer that arrives right after.
+class SetInvalidItems extends Web3dCommand {
+  const SetInvalidItems(this.ids);
+
+  final List<String> ids;
+
+  @override
+  String get type => 'setInvalidItems';
+
+  @override
+  Map<String, Object?> get payload => {'ids': ids};
 }
 
 class SetDebugOverlay extends Web3dCommand {
@@ -131,11 +185,29 @@ class SceneReady extends Web3dEvent {
   final String renderer;
 }
 
-class PotSelected extends Web3dEvent {
-  const PotSelected(this.id);
+/// The user tapped an item, or empty space to clear the selection.
+class ItemSelected extends Web3dEvent {
+  const ItemSelected(this.id);
 
-  /// `null` when the selection was cleared by tapping empty space.
   final String? id;
+}
+
+/// The user dragged an item to a new spot.
+///
+/// A request, not a fact: the app validates it, then either echoes the item
+/// back with [UpsertItem] or re-sends the old position to snap it back.
+class ItemMoved extends Web3dEvent {
+  const ItemMoved({
+    required this.id,
+    required this.position,
+    this.mountHeightM,
+  });
+
+  final String id;
+  final Vec2 position;
+
+  /// Set when the drag changed how high an elevated item hangs.
+  final double? mountHeightM;
 }
 
 class ScenePong extends Web3dEvent {
@@ -180,7 +252,8 @@ Web3dEvent? decodeWeb3dEvent(Object? raw) {
       protocol: _asInt(decoded['protocol']) ?? kProtocolVersion,
       renderer: decoded['renderer'] as String? ?? 'unknown',
     ),
-    'selected' => PotSelected(decoded['id'] as String?),
+    'selected' => ItemSelected(decoded['id'] as String?),
+    'itemMoved' => _decodeItemMoved(decoded),
     'pong' => const ScenePong(),
     'fps' => switch (_asInt(decoded['value'])) {
       final int value => SceneFps(value),
@@ -189,6 +262,20 @@ Web3dEvent? decodeWeb3dEvent(Object? raw) {
     'error' => SceneError(decoded['message']?.toString() ?? 'unknown error'),
     _ => null,
   };
+}
+
+Web3dEvent? _decodeItemMoved(Map<Object?, Object?> decoded) {
+  final id = decoded['id'];
+  final position = decoded['position'];
+  if (id is! String || position is! Map) return null;
+  final x = asDouble(position['x']);
+  final z = asDouble(position['z']);
+  if (x == null || z == null) return null;
+  return ItemMoved(
+    id: id,
+    position: Vec2(x, z),
+    mountHeightM: asDouble(decoded['mountHeightM']),
+  );
 }
 
 int? _asInt(Object? value) => switch (value) {

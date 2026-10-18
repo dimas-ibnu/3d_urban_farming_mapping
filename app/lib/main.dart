@@ -3,14 +3,15 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'bridge/web3d_bridge.dart';
 import 'l10n/gen/app_localizations.dart';
-import 'scene_page.dart';
+import 'model/project.dart';
+import 'ui/editor_page.dart';
 
 void main() {
   runApp(const KebunkuApp());
 }
 
 class KebunkuApp extends StatelessWidget {
-  const KebunkuApp({super.key, this.bridge, this.locale});
+  const KebunkuApp({super.key, this.bridge, this.locale, this.project});
 
   /// Injected by widget tests; production builds pick the platform transport.
   final Web3dBridge? bridge;
@@ -18,6 +19,10 @@ class KebunkuApp extends StatelessWidget {
   /// Overrides the device locale. `null` means "follow the device", which is
   /// what the app does in production.
   final Locale? locale;
+
+  /// Seeds the editor with an existing plan. `null` starts an empty balcony;
+  /// the storage ticket will load the last project here.
+  final Project? project;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +41,7 @@ class KebunkuApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF4E8C3A)),
       ),
-      home: ScenePage(bridge: bridge),
+      home: EditorPage(bridge: bridge, project: project),
     );
   }
 }

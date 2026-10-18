@@ -2,43 +2,223 @@
   "@@locale": "id",
   "appTitle": "Kebunku",
   "@appTitle": { "description": "Nama aplikasi yang tampil di judul dan app bar." },
-  "sceneTabTitle": "Denah 3D",
-  "@sceneTabTitle": { "description": "Judul halaman yang menampilkan adegan 3D." },
+
+  "editorTitle": "Denah 3D",
+  "@editorTitle": { "description": "Judul halaman editor denah." },
   "statusConnecting": "Menyambungkan ke adegan 3D…",
   "@statusConnecting": { "description": "Status sebelum adegan mengirim pesan ready." },
-  "statusReady": "Adegan siap (protokol v{version})",
-  "@statusReady": {
-    "description": "Status setelah adegan mengirim pesan ready.",
-    "placeholders": { "version": { "type": "int" } }
-  },
-  "statusSelected": "Pot terpilih: {id}",
+  "statusReady": "Adegan siap",
+  "@statusReady": { "description": "Status setelah adegan mengirim pesan ready." },
+  "statusSelected": "Terpilih: {name}",
   "@statusSelected": {
-    "description": "Status saat pengguna menyentuh sebuah pot di adegan.",
-    "placeholders": { "id": { "type": "String" } }
+    "description": "Status saat sebuah item dipilih.",
+    "placeholders": { "name": { "type": "String" } }
   },
-  "statusDeselected": "Tidak ada pot yang dipilih",
-  "@statusDeselected": { "description": "Status saat pilihan pot dibatalkan." },
   "statusError": "Kesalahan adegan: {message}",
   "@statusError": {
     "description": "Status saat adegan melaporkan kesalahan.",
     "placeholders": { "message": { "type": "String" } }
   },
-  "addPot": "Tambah pot",
-  "@addPot": { "description": "Tombol untuk menambahkan satu pot ke adegan." },
-  "clearPots": "Kosongkan",
-  "@clearPots": { "description": "Tombol untuk menghapus semua pot." },
-  "potCount": "{count, plural, =0{Belum ada pot} other{{count} pot}}",
-  "@potCount": {
-    "description": "Jumlah pot di adegan.",
+
+  "sceneUnavailableTitle": "Tampilan 3D tidak tersedia",
+  "@sceneUnavailableTitle": { "description": "Judul pesan saat WebGL tidak bisa dijalankan." },
+  "sceneUnavailableBody": "Peramban ini tidak dapat menjalankan grafis 3D (WebGL). Nyalakan akselerasi perangkat keras atau coba peramban lain. Denah Anda tetap tersimpan dan ringkasan area tanam di bawah tetap berjalan.",
+  "@sceneUnavailableBody": { "description": "Penjelasan saat WebGL tidak tersedia." },
+  "sceneUnavailableDetail": "Rincian: {message}",
+  "@sceneUnavailableDetail": {
+    "description": "Pesan kesalahan teknis dari adegan.",
+    "placeholders": { "message": { "type": "String" } }
+  },
+
+  "view2d": "2D",
+  "@view2d": { "description": "Tombol tampilan denah dari atas." },
+  "view3d": "3D",
+  "@view3d": { "description": "Tombol tampilan 3D yang bisa diputar." },
+  "editSpace": "Ubah ruang",
+  "@editSpace": { "description": "Tombol membuka wisaya ukuran ruang." },
+
+  "paletteTitle": "Tambah tanaman",
+  "@paletteTitle": { "description": "Judul panel daftar item yang bisa ditambahkan." },
+  "itemPot": "Pot",
+  "@itemPot": { "description": "Nama jenis item: pot biasa di lantai." },
+  "itemVerticalRack": "Rak vertikal",
+  "@itemVerticalRack": { "description": "Nama jenis item: rak bertingkat." },
+  "itemHangingPlanter": "Pot gantung",
+  "@itemHangingPlanter": { "description": "Nama jenis item: pot yang digantung." },
+  "itemWallPlanter": "Pot dinding",
+  "@itemWallPlanter": { "description": "Nama jenis item: pot yang menempel di dinding." },
+  "itemCount": "{count, plural, =0{Belum ada item} other{{count} item}}",
+  "@itemCount": {
+    "description": "Jumlah item di denah.",
     "placeholders": { "count": { "type": "int" } }
   },
+
+  "growingAreaTitle": "Area tanam",
+  "@growingAreaTitle": { "description": "Judul ringkasan area tanam." },
+  "growingAreaSummary": "{floor} m² lantai → {growing} m² area tanam",
+  "@growingAreaSummary": {
+    "description": "Ringkasan luas lantai dibanding total area tanam.",
+    "placeholders": {
+      "floor": { "type": "String" },
+      "growing": { "type": "String" }
+    }
+  },
+  "growingAreaMultiplier": "{value}× luas lantai",
+  "@growingAreaMultiplier": {
+    "description": "Berapa kali lipat area tanam dibanding luas lantai.",
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "freeFloor": "Sisa lantai kosong {value} m²",
+  "@freeFloor": {
+    "description": "Luas lantai yang belum terpakai.",
+    "placeholders": { "value": { "type": "String" } }
+  },
+
+  "selectionNone": "Ketuk sebuah item di adegan untuk mengubahnya.",
+  "@selectionNone": { "description": "Teks panel detail saat tidak ada yang dipilih." },
+  "fieldLevels": "Jumlah tingkat",
+  "@fieldLevels": { "description": "Jumlah rak pada rak vertikal." },
+  "fieldRotation": "Putaran",
+  "@fieldRotation": { "description": "Sudut putar item." },
+  "fieldMountHeight": "Tinggi pasang",
+  "@fieldMountHeight": { "description": "Tinggi item gantung atau pot dinding dari lantai." },
+  "degreeValue": "{value}°",
+  "@degreeValue": {
+    "description": "Nilai sudut dalam derajat.",
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "metreValue": "{value} m",
+  "@metreValue": {
+    "description": "Nilai panjang dalam meter.",
+    "placeholders": { "value": { "type": "String" } }
+  },
+  "removeItem": "Hapus item",
+  "@removeItem": { "description": "Tombol menghapus item terpilih." },
+
+  "layoutOk": "Semua item muat di ruang ini.",
+  "@layoutOk": { "description": "Pesan saat tidak ada masalah penempatan." },
+  "layoutIssueCount": "{count, plural, other{{count} penempatan bermasalah}}",
+  "@layoutIssueCount": {
+    "description": "Jumlah masalah penempatan.",
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "issueOutsideSpace": "Keluar dari batas ruang",
+  "@issueOutsideSpace": { "description": "Masalah: item melewati garis lantai." },
+  "issueOverlapsItem": "Bertabrakan dengan item lain",
+  "@issueOverlapsItem": { "description": "Masalah: dua item di lantai bertumpuk." },
+  "issueTooTall": "Lebih tinggi dari langit-langit",
+  "@issueTooTall": { "description": "Masalah: item melebihi tinggi ruang." },
+  "issueNoWallToMountOn": "Tidak menempel pada dinding",
+  "@issueNoWallToMountOn": { "description": "Masalah: pot dinding tidak dekat dinding mana pun." },
+
+  "toggleOverlay": "Tampilkan FPS di adegan",
+  "@toggleOverlay": { "description": "Sakelar untuk overlay FPS di dalam adegan." },
   "fpsLabel": "{fps} fps",
   "@fpsLabel": {
     "description": "Pengukuran kecepatan render dari adegan.",
     "placeholders": { "fps": { "type": "int" } }
   },
-  "toggleOverlay": "Tampilkan FPS di adegan",
-  "@toggleOverlay": { "description": "Sakelar untuk overlay FPS di dalam adegan." },
+
+  "wizardTitle": "Ukuran ruang",
+  "@wizardTitle": { "description": "Judul wisaya pengisian ukuran ruang." },
+  "wizardStepSize": "Ukuran",
+  "@wizardStepSize": { "description": "Langkah wisaya: lebar, kedalaman, tinggi." },
+  "wizardStepBarriers": "Dinding & pagar",
+  "@wizardStepBarriers": { "description": "Langkah wisaya: dinding, pagar, penghalang." },
+  "wizardStepFacing": "Arah hadap",
+  "@wizardStepFacing": { "description": "Langkah wisaya: arah mata angin." },
+  "wizardStepLocation": "Lokasi",
+  "@wizardStepLocation": { "description": "Langkah wisaya: posisi di peta." },
+  "wizardNext": "Lanjut",
+  "@wizardNext": { "description": "Tombol ke langkah berikutnya." },
+  "wizardBack": "Kembali",
+  "@wizardBack": { "description": "Tombol ke langkah sebelumnya." },
+  "wizardSave": "Simpan ruang",
+  "@wizardSave": { "description": "Tombol menyimpan ruang dan menutup wisaya." },
+
+  "fieldSpaceName": "Nama ruang",
+  "@fieldSpaceName": { "description": "Nama yang diberikan pengguna untuk ruangnya." },
+  "fieldWidth": "Lebar (m)",
+  "@fieldWidth": { "description": "Lebar ruang dalam meter." },
+  "fieldDepth": "Kedalaman (m)",
+  "@fieldDepth": { "description": "Kedalaman ruang dalam meter." },
+  "fieldCeilingHeight": "Tinggi langit-langit (m)",
+  "@fieldCeilingHeight": { "description": "Tinggi lantai ke langit-langit." },
+  "fieldBarrierHeight": "Tinggi (m)",
+  "@fieldBarrierHeight": { "description": "Tinggi dinding atau pagar." },
+  "errorPositiveNumber": "Isi dengan angka lebih dari 0",
+  "@errorPositiveNumber": { "description": "Pesan galat untuk kolom ukuran." },
+  "floorAreaPreview": "Luas lantai {value} m²",
+  "@floorAreaPreview": {
+    "description": "Pratinjau luas lantai dari ukuran yang diisi.",
+    "placeholders": { "value": { "type": "String" } }
+  },
+
+  "barrierWall": "Dinding",
+  "@barrierWall": { "description": "Jenis penghalang: dinding masif." },
+  "barrierRailing": "Pagar",
+  "@barrierRailing": { "description": "Jenis penghalang: pagar balkon." },
+  "barrierObstacle": "Penghalang",
+  "@barrierObstacle": { "description": "Jenis penghalang: benda lain, misalnya AC." },
+  "barrierSideNorth": "Sisi utara",
+  "@barrierSideNorth": { "description": "Tepi ruang di sisi utara denah." },
+  "barrierSideEast": "Sisi timur",
+  "@barrierSideEast": { "description": "Tepi ruang di sisi timur denah." },
+  "barrierSideSouth": "Sisi selatan",
+  "@barrierSideSouth": { "description": "Tepi ruang di sisi selatan denah." },
+  "barrierSideWest": "Sisi barat",
+  "@barrierSideWest": { "description": "Tepi ruang di sisi barat denah." },
+  "barrierNone": "Terbuka",
+  "@barrierNone": { "description": "Tepi ruang tanpa dinding atau pagar." },
+  "barrierHint": "Pilih apa yang ada di tiap sisi denah.",
+  "@barrierHint": { "description": "Penjelasan langkah dinding dan pagar." },
+
+  "facingHint": "Putar piringan ke arah yang dihadap sisi terbuka ruang.",
+  "@facingHint": { "description": "Penjelasan pemilih arah mata angin." },
+  "facingValue": "{degrees}° {compass}",
+  "@facingValue": {
+    "description": "Arah hadap dalam derajat dan mata angin.",
+    "placeholders": {
+      "degrees": { "type": "String" },
+      "compass": { "type": "String" }
+    }
+  },
+  "compassN": "U",
+  "@compassN": { "description": "Singkatan mata angin: utara." },
+  "compassNE": "TL",
+  "@compassNE": { "description": "Singkatan mata angin: timur laut." },
+  "compassE": "T",
+  "@compassE": { "description": "Singkatan mata angin: timur." },
+  "compassSE": "TG",
+  "@compassSE": { "description": "Singkatan mata angin: tenggara." },
+  "compassS": "S",
+  "@compassS": { "description": "Singkatan mata angin: selatan." },
+  "compassSW": "BD",
+  "@compassSW": { "description": "Singkatan mata angin: barat daya." },
+  "compassW": "B",
+  "@compassW": { "description": "Singkatan mata angin: barat." },
+  "compassNW": "BL",
+  "@compassNW": { "description": "Singkatan mata angin: barat laut." },
+
+  "locationHint": "Lokasi dipakai untuk menghitung sinar matahari nanti.",
+  "@locationHint": { "description": "Penjelasan langkah lokasi." },
+  "locationUseDevice": "Pakai lokasi perangkat",
+  "@locationUseDevice": { "description": "Tombol meminta lokasi dari peramban." },
+  "locationCity": "Pilih kota",
+  "@locationCity": { "description": "Label pemilih kota." },
+  "locationUnset": "Belum diatur",
+  "@locationUnset": { "description": "Status saat lokasi belum dipilih." },
+  "locationDenied": "Lokasi perangkat tidak tersedia. Pilih kota saja.",
+  "@locationDenied": { "description": "Pesan saat izin lokasi ditolak atau gagal." },
+  "locationCoordinates": "{latitude}, {longitude}",
+  "@locationCoordinates": {
+    "description": "Koordinat lintang dan bujur.",
+    "placeholders": {
+      "latitude": { "type": "String" },
+      "longitude": { "type": "String" }
+    }
+  },
+
   "unsupportedPlatform": "Platform ini belum didukung.",
   "@unsupportedPlatform": { "description": "Pesan untuk platform tanpa transport 3D." }
 }

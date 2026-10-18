@@ -47,3 +47,21 @@ stressed at all by this scene.
   wasteful on battery. Rendering on demand (only after a change or a camera move)
   is the straightforward fix, deferred because the FPS sampling here needs a
   continuous loop.
+
+## Follow-ups done in the editor ticket
+
+Both of the fixable risks above were addressed when the layout editor landed
+(work items #3 and #4):
+
+- **Rendering on demand.** The scene now draws only after a change or a camera
+  move; an untouched plan costs nothing per frame. The continuous loop survives
+  as the opt-in debug mode behind `setDebugOverlay`, which is what the `fps`
+  numbers in this document were measured with — so the measurement path is
+  unchanged and this table stays comparable.
+- **A real UI when WebGL is missing.** The `error` message now reaches a
+  Flutter panel that explains what happened and keeps the plan and the
+  growing-area summary usable behind it, instead of a dead canvas.
+
+Still open: the measurement on a cheap physical Android device, and the quality
+switch for shadows. Both belong with the sun-hours heatmap (work item #5),
+which is the first feature heavy enough to force the question.
