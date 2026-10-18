@@ -105,11 +105,9 @@ new strings to both files and never hard-code user-visible text.
 
 The web app is hosted on [Netlify](https://www.netlify.com/). GitHub Actions builds and deploys it (`.github/workflows/deploy.yml`). Netlify does not build it.
 
-| Trigger | Result |
-|---|---|
-| Push to `main` | Production deploy |
-| Pull request | Deploy preview at `https://pr-<number>--<site>.netlify.app`. The URL is posted as a comment on the PR and updated on each push |
-| Manual run (`workflow_dispatch`) | Draft deploy on any branch; deploys to production when run on `main` |
+Both workflows (`ci.yml` and `deploy.yml`) run **only on pushes to `main`**, i.e. when a PR is merged. Pull requests and feature branches don't trigger them. Each merge to `main` runs CI and a production deploy.
+
+Branch workflow: branch out from the latest `main`, push the branch, open a PR against `main`, and merge it.
 
 The workflow:
 
@@ -128,7 +126,7 @@ Add these under **Settings → Secrets and variables → Actions** in the GitHub
 | `NETLIFY_AUTH_TOKEN` | Netlify → User settings → Applications → Personal access tokens |
 | `NETLIFY_SITE_ID` | Netlify → Site configuration → General → Site details → Site ID |
 
-If either secret is missing, the build still runs and the deploy steps are skipped with a notice. This also happens on pull requests from forks, which don't get repository secrets.
+If either secret is missing, the build still runs and the deploy steps are skipped with a notice.
 
 ### One-time Netlify setup
 
