@@ -68,13 +68,52 @@ kept in sync by hand:
 - `web3d/src/protocol.ts`
 - `app/lib/bridge/web3d_protocol.dart`
 
-Every envelope carries `v` (currently `1`). Either side drops messages from a
+Every envelope carries `v` (currently `2`). Either side drops messages from a
 version it does not know rather than guessing at their shape.
 
-| Direction | Messages |
-|---|---|
-| App → scene | `setFloor`, `addPot`, `removePot`, `clearPots`, `setDebugOverlay`, `ping` |
-| Scene → app | `ready`, `selected`, `pong`, `fps`, `error` |
+**v2** replaced the prototype's pot-only messages with commands that mirror the
+project model in `app/lib/model/`. The app pushes the space and the items; the
+scene reports what the user touched or dragged.
+
+| Direction | Message | Payload | Meaning |
+|---|---|---|---|
+| App → scene | `setSpace` | `space` | Replaces the floor outline, height, facing direction and barriers. Items are kept |
+| App → scene | `upsertItem` | `item` | Adds an item, or replaces the one with the same `id` |
+| App → scene | `removeItem` | `id` | Drops one item |
+| App → scene | `clearItems` | — | Drops every item |
+| App → scene | `setView` | `mode`: `2d` \| `3d` | Top-down plan camera or orbiting 3D camera |
+| App → scene | `setSelection` | `id` \| `null` | Highlights an item, or clears the highlight |
+| App → scene | `setInvalidItems` | `ids` | The app's verdict on which items break a layout rule; the scene tints them |
+| App → scene | `setDebugOverlay` | `visible` | Turns the in-scene FPS counter on. Also switches the scene to a continuous render loop |
+| App → scene | `ping` | — | Liveness check |
+| Scene → app | `ready` | `protocol`, `renderer` | The scene is up. `renderer` is the WebGL renderer string |
+| Scene → app | `selected` | `id` \| `null` | The user tapped an item, or empty space |
+| Scene → app | `itemMoved` | `id`, `position`, `mountHeightM?` | The user dragged an item. A **request**, not a fact — see below |
+| Scene → app | `pong` | — | Answer to `ping` |
+| Scene → app | `fps` | `value` | Sampled once a second while the debug overlay is on |
+| Scene → app | `error` | `message` | Unusable WebGL, an unknown message, a version mismatch |
+
+`space` and `item` are exactly the JSON that `Space.toJson` and
+`PlacedItem.toJson` write — the same shape the storage ticket will persist, so
+there is one definition of the model rather than a wire format beside it.
+
+### The app is the single source of truth
+
+A drag in the scene moves the item there and then, because waiting a round trip
+would feel broken, but that move is only a proposal. The app re-runs the layout
+rules in `app/lib/model/layout_rules.dart`, snaps wall planters to the nearest
+wall, and answers with `upsertItem` — which is what finally decides where the
+item sits — plus `setInvalidItems`. The scene keeps a copy of the model solely
+to hit-test, aim its cameras, and tint an item red the instant a drag goes
+wrong; it never persists anything.
+
+### Rendering on demand
+
+The scene draws only after something changes: every command and every camera
+move marks the frame stale, and an untouched plan costs nothing per frame. The
+debug overlay is the opt-in exception — measuring a frame rate needs frames, so
+while it is on the scene renders continuously and reports `fps`. That is the
+battery fix called for in [docs/PERF_NOTES.md](docs/PERF_NOTES.md).
 
 One Dart interface, `Web3dBridge`, hides the two transports:
 
@@ -88,11 +127,36 @@ callers never have to wait for the handshake.
 
 ## Current state
 
-`app/lib/scene_page.dart` is the bridge prototype from the kickoff ticket: a
-box-shaped balcony floor with pots you can add, clear and tap. Drag orbits the
-camera; a tap picks a pot and the scene answers with `selected`. The real editor,
-the sun engine, the crop database and storage are later tickets — see the work
-breakdown in [docs/APP_GOAL.md](docs/APP_GOAL.md).
+The space model and the layout editor are in (work items #3 and #4 of the
+breakdown in [docs/APP_GOAL.md](docs/APP_GOAL.md)).
+
+```
+app/lib/model/      The project data model — the single source of truth
+app/lib/state/      ProjectController: owns the project, drives the scene
+app/lib/ui/         Editor page, space wizard, compass dial
+app/lib/bridge/     The two transports and the v2 protocol
+web3d/src/          Three.js editor: cameras, item meshes, drag and hit-testing
+```
+
+- **Project data model** (`app/lib/model/`): a space (floor polygon in metres,
+  ceiling height, facing bearing, walls / railings / obstacles), placed items
+  (pot, vertical rack, hanging planter, wall planter — size, levels, position,
+  rotation, mounting height) and a location. It serialises to JSON with a
+  `schemaVersion`, which is exactly what the storage ticket will persist.
+- **Manual space input** (`app/lib/ui/space_wizard_page.dart`): a four-step
+  wizard — size, what stands along each side, a compass dial for the facing
+  direction, and a location from browser geolocation or a shortlist of
+  Indonesian cities. The web has no AR, so this is the only way in there.
+- **Layout editor**: 2D plan / 3D orbit toggle, drag to move items, wall
+  planters snapped to the nearest wall, and fit and collision checks (inside
+  the outline, no overlap on the floor, nothing taller than the ceiling) that
+  tint the offender red in the scene and list the problem in the panel.
+- **Growing-area summary**: floor area against the growing area the layout
+  yields, counting every rack level — "2,4 m² lantai → 1,3 m² area tanam".
+- A friendly explanation replaces the canvas where WebGL is unavailable; the
+  plan and the summary keep working behind it.
+
+The sun engine, the crop database, storage and export are later tickets.
 
 ## Localisation
 
