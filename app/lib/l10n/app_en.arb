@@ -12,5 +12,16 @@
   "potCount": "{count, plural, =0{No pots yet} other{{count} pots}}",
   "fpsLabel": "{fps} fps",
   "toggleOverlay": "Show FPS in the scene",
-  "unsupportedPlatform": "This platform is not supported yet."
+  "unsupportedPlatform": "This platform is not supported yet.",
+  "containerPot": "pot",
+  "containerRack": "vertical rack",
+  "containerHanging": "hanging planter",
+  "containerWall": "wall planter",
+  "cropReasonGoodFit": "Good fit for this spot",
+  "cropReasonNotEnoughSun": "Needs ≥{required} h of sun, this spot gets {actual} h",
+  "cropReasonBelowIdealSun": "Grows best with {ideal} h of sun, this spot gets {actual} h",
+  "cropReasonTooMuchSun": "Prefers partial shade (≤{max} h of sun), this spot gets {actual} h",
+  "cropReasonContainerNotSuitable": "Does not do well in a {container}",
+  "cropReasonPotTooShallow": "Needs a pot ≥{required} cm deep, this one is {actual} cm",
+  "cropReasonPotTooSmall": "Needs a pot of ≥{required} L, this one holds {actual} L"
 }

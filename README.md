@@ -91,8 +91,11 @@ callers never have to wait for the handshake.
 `app/lib/scene_page.dart` is the bridge prototype from the kickoff ticket: a
 box-shaped balcony floor with pots you can add, clear and tap. Drag orbits the
 camera; a tap picks a pot and the scene answers with `selected`. The real editor,
-the sun engine, the crop database and storage are later tickets — see the work
-breakdown in [docs/APP_GOAL.md](docs/APP_GOAL.md).
+the sun engine and storage are later tickets — see the work breakdown in
+[docs/APP_GOAL.md](docs/APP_GOAL.md).
+
+`app/lib/crops/` holds the crop database and the suggestion and harvest logic,
+in pure Dart and not yet wired to the UI — see [docs/CROPS.md](docs/CROPS.md).
 
 ## Localisation
 
