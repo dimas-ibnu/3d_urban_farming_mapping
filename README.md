@@ -167,33 +167,25 @@ new strings to both files and never hard-code user-visible text.
 
 ## Deploying the web app
 
-The web app is hosted on [Netlify](https://www.netlify.com/). GitHub Actions builds and deploys it (`.github/workflows/deploy.yml`). Netlify does not build it.
+The web app is hosted on GitHub Pages: **https://dimas-ibnu.github.io/3d_urban_farming_mapping/**
 
-Both workflows (`ci.yml` and `deploy.yml`) run **only on pushes to `main`**, i.e. when a PR is merged. Pull requests and feature branches don't trigger them. Each merge to `main` runs CI and a production deploy.
+Both workflows (`ci.yml` and `deploy.yml`) run **only on pushes to `main`**, i.e. when a PR is merged. Pull requests and feature branches don't trigger them. Each merge to `main` runs CI and publishes the site.
 
 Branch workflow: branch out from the latest `main`, push the branch, open a PR against `main`, and merge it.
 
-The workflow:
+The deploy workflow (`.github/workflows/deploy.yml`):
 
 1. Builds `web3d/` (`npm ci && npm run build`). Vite writes one self-contained `index.html` into `app/assets/web3d/`.
-2. Builds the Flutter web app (`flutter build web --release`). The scene ends up at `app/build/web/assets/assets/web3d/index.html`.
-3. Deploys `app/build/web` with the Netlify CLI (`netlify deploy --no-build`), run from the repo root so `netlify.toml` is applied.
+2. Builds the Flutter web app with `flutter build web --release --base-href /3d_urban_farming_mapping/`, because project pages are served from `/<repo>/`. The scene ends up at `app/build/web/assets/assets/web3d/index.html`.
+3. Uploads `app/build/web` as a Pages artifact and publishes it with `actions/deploy-pages`.
 
-`netlify.toml` sets the SPA fallback (`/* /index.html 200`), the MIME types for `.wasm` and `.js`, and caching. Flutter's entry files (`index.html`, `main.dart.js`, `flutter_bootstrap.js`, `flutter_service_worker.js`) and the web3d scene are served with `no-cache`, so users get the new version after each deploy.
+No secrets are needed: the workflow uses GitHub's built-in token (`pages: write`, `id-token: write`).
 
-### Required secrets
+Notes:
 
-Add these under **Settings → Secrets and variables → Actions** in the GitHub repo. Never commit them.
+- The app uses Flutter's default hash URLs (`/#/route`), so deep links work without an SPA fallback.
+- GitHub Pages doesn't support custom headers and caches files for about 10 minutes, so right after a deploy a hard refresh may be needed to see the new version.
 
-| Secret | Where to get it |
-|---|---|
-| `NETLIFY_AUTH_TOKEN` | Netlify → User settings → Applications → Personal access tokens |
-| `NETLIFY_SITE_ID` | Netlify → Site configuration → General → Site details → Site ID |
+### One-time setup
 
-If either secret is missing, the build still runs and the deploy steps are skipped with a notice.
-
-### One-time Netlify setup
-
-1. Create the site in Netlify (**Add new site → Deploy manually** is enough; it doesn't need to be linked to the repo).
-2. Turn off Netlify's own builds: **Site configuration → Build & deploy → Continuous deployment → Build settings → Stop builds**. GitHub Actions builds every commit, so Netlify must not build it again. As a backstop, `netlify.toml` also sets `ignore = "exit 0"`, which cancels any Netlify build that does start.
-3. Add the two secrets above.
+In the repo, **Settings → Pages → Build and deployment → Source** must be **GitHub Actions**.

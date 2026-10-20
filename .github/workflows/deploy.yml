@@ -1,32 +1,31 @@
 name: Deploy web
 
-# Builds web3d/ + the Flutter web app and deploys app/build/web to Netlify.
-# Runs only on pushes to main (i.e. after a PR is merged) -> production deploy.
-# The deploy steps are skipped (build still runs) when the Netlify secrets are
-# not configured.
+# Builds web3d/ + the Flutter web app and publishes app/build/web to GitHub
+# Pages (https://dimas-ibnu.github.io/3d_urban_farming_mapping/).
+# Runs only on pushes to main (i.e. after a PR is merged).
 
 on:
   push:
     branches: [main]
 
 concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  group: pages
+  cancel-in-progress: false
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 env:
   FLUTTER_VERSION: '3.44.1'
   NODE_VERSION: '22'
-  NETLIFY_CLI_VERSION: '23'
+  # Project pages are served from /<repo>/, so Flutter needs a matching base href.
+  BASE_HREF: /${{ github.event.repository.name }}/
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
-    env:
-      NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-      NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
     steps:
       - uses: actions/checkout@v4
 
@@ -54,28 +53,23 @@ jobs:
         working-directory: app
         run: |
           flutter pub get
-          flutter build web --release
+          flutter build web --release --base-href "$BASE_HREF"
           test -f build/web/assets/assets/web3d/index.html
+          # Serve files as-is (no Jekyll processing).
+          touch build/web/.nojekyll
 
-      - name: Check Netlify secrets
-        id: secrets
-        run: |
-          if [ -n "$NETLIFY_AUTH_TOKEN" ] && [ -n "$NETLIFY_SITE_ID" ]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Netlify deploy skipped::NETLIFY_AUTH_TOKEN and/or NETLIFY_SITE_ID are not set for this run."
-          fi
+      - uses: actions/configure-pages@v5
 
-      - name: Deploy to Netlify
-        if: steps.secrets.outputs.available == 'true'
-        env:
-          COMMIT_TITLE: ${{ github.event.head_commit.message }}
-        run: |
-          # Run from the repo root so netlify.toml (headers, redirects) is applied.
-          # --no-build: GitHub Actions already built the site.
-          message="${COMMIT_TITLE%%$'\n'*} (${GITHUB_SHA::7})"
-          npx --yes "netlify-cli@$NETLIFY_CLI_VERSION" deploy --no-build --prod \
-            --dir=app/build/web --site="$NETLIFY_SITE_ID" --message="$message" --json > netlify-deploy.json
-          url=$(jq -r '.url' netlify-deploy.json)
-          echo "### Netlify deploy: $url" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: app/build/web
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
